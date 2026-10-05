@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Escape — Interactive Evacuation Route Simulator</title>
+  <meta name="description" content="Technical, precision evacuation route simulator for building complexes. Computes lowest-cost escape paths with real-time hazard rerouting." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="mobile-drawer-toggle" id="left-drawer-btn" aria-label="Toggle Route Settings" onclick="app.toggleDrawer('left')">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M2 3.75A.75.75 0 012.75 3h10.5a.75.75 0 010 1.5H2.75A.75.75 0 012 3.75zm0 4.25a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H2.75A.75.75 0 012 8zm0 4.25a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z"/></svg>
+      </button>
+
+      <div class="header-brand">
+        <svg class="brand-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <div class="brand-titles">
+          <h1 id="app-title" class="brand-name">Smart Escape</h1>
+          <span id="app-subtitle" class="brand-sub">Evacuation Route Simulator</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Segmented Toolbar -->
+    <div class="header-center">
+      <div class="segmented-control" role="group" aria-label="Simulation Mode">
+        <button id="mode-view" class="segment-btn active" onclick="app.setMode('view')" title="View / Select Start (V)">
+          <span id="mode-view-label">View</span>
+          <kbd>V</kbd>
+        </button>
+        <button id="mode-block" class="segment-btn" onclick="app.setMode('block')" title="Block Node (N)">
+          <span id="mode-block-label">Block Node</span>
+          <kbd>N</kbd>
+        </button>
+        <button id="mode-edge" class="segment-btn" onclick="app.setMode('edge')" title="Block Corridor (C)">
+          <span id="mode-edge-label">Block Corridor</span>
+          <kbd>C</kbd>
+        </button>
+        <button id="mode-exit" class="segment-btn" onclick="app.setMode('exit')" title="Toggle Exit (E)">
+          <span id="mode-exit-label">Toggle Exit</span>
+          <kbd>E</kbd>
+        </button>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-right">
+      <button id="lang-toggle-btn" class="btn btn-ghost" onclick="app.toggleLanguage()" title="Switch Language" aria-label="Language Toggle">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.545 6.714 4.11 8H1.5l3.25-9h1.5l3.25 9H6.89l-.435-1.286H4.545zm1.516-4.524-.96 2.876h1.92l-.96-2.876zM9.5 5.5a4 4 0 0 0 2.243-3.693H10.5a3 3 0 0 1-1.688 2.688A7 7 0 0 1 7.25 5.093l.635 1.144c.48-.22.95-.49 1.405-.807A8.04 8.04 0 0 0 11.5 8h1.25a9.2 9.2 0 0 1-2.67-3.155A5 5 0 0 0 13.5 1.5h-5v1.25h2.158A4 4 0 0 1 9.5 5.5z"/></svg>
+        <span id="lang-label">বাংলা</span>
+      </button>
+
+      <button id="theme-toggle-btn" class="btn btn-ghost" onclick="app.toggleTheme()" title="Toggle Theme" aria-label="Toggle Color Theme">
+        <svg id="theme-sun-icon" class="theme-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0zm0 13a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13zm8-5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8zM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8zm10.657-5.657a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0zm-9.193 9.192a.75.75 0 0 1 0 1.061l-1.06 1.06a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0zm9.193 0a.75.75 0 0 1-1.06 0l-1.061-1.06a.75.75 0 0 1 1.06-1.061l1.061 1.06a.75.75 0 0 1 0 1.061zM4.464 3.404a.75.75 0 0 1-1.06 0L2.343 2.343a.75.75 0 0 1 1.06-1.06l1.061 1.06a.75.75 0 0 1 0 1.061z"/></svg>
+      </button>
+
+      <button id="reset-btn" class="btn btn-ghost" onclick="app.resetToInitialState()" title="Restore original hazards">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+        <span id="reset-label">Reset</span>
+      </button>
+
+      <label class="btn btn-primary" for="file-input" id="import-btn-label">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M.5 9.9a.75.75 0 0 1 .75.75v2.6c0 .414.336.75.75.75h12a.75.75 0 0 0 .75-.75v-2.6a.75.75 0 0 1 1.5 0v2.6A2.25 2.25 0 0 1 14 15.5H2A2.25 2.25 0 0 1-.25 13.25v-2.6A.75.75 0 0 1 .5 9.9z"/><path fill-rule="evenodd" d="M7.47 1.47a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1-1.06 1.06L8.75 3.81V10a.75.75 0 0 1-1.5 0V3.81L5.53 5.53a.75.75 0 0 1-1.06-1.06l3-3z"/></svg>
+        <span id="import-label">Import JSON</span>
+      </label>
+      <input type="file" id="file-input" accept=".json" style="display:none;" onchange="app.importFile(event)" />
+
+      <button class="mobile-drawer-toggle" id="right-drawer-btn" aria-label="Toggle Elements List" onclick="app.toggleDrawer('right')">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════ MAIN VIEWPORT ═══════════════════════════ -->
+  <main class="app-main">
+
+    <!-- LEFT SIDEBAR: Unified Card with Divided Sections -->
+    <aside class="sidebar sidebar-left" id="sidebar-left">
+      <div class="unified-card">
+        
+        <!-- SECTION 1: Building Specs -->
+        <section class="card-section">
+          <div class="section-header">
+            <span id="building-card-title" class="section-label">Building</span>
+          </div>
+          <div class="building-meta">
+            <div id="building-name" class="building-title">—</div>
+            <div class="meta-stats-row">
+              <div class="meta-stat">
+                <span id="stat-nodes-label" class="stat-caption">Nodes</span>
+                <span id="stat-nodes" class="stat-number">—</span>
+              </div>
+              <div class="meta-stat-divider"></div>
+              <div class="meta-stat">
+                <span id="stat-edges-label" class="stat-caption">Corridors</span>
+                <span id="stat-edges" class="stat-number">—</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Starting Location Selection -->
+        <section class="card-section">
+          <div class="section-header">
+            <span id="start-card-title" class="section-label">Starting Location</span>
+          </div>
+          <div class="select-wrapper">
+            <select id="start-select" class="form-select" onchange="app.setStartFromSelect(this.value)">
+              <option value="" id="start-placeholder">— Select Start —</option>
+            </select>
+          </div>
+          <p id="start-hint" class="helper-text">Click any room or junction on canvas to set start.</p>
+        </section>
+
+        <!-- SECTION 3: Route Details & Stepper -->
+        <section class="card-section section-route" id="route-result-card">
+          <div class="section-header">
+            <span id="route-card-title" class="section-label">Route Details</span>
+          </div>
+          <div id="route-display" class="route-container">
+            <div class="route-idle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+              <span id="route-empty-text">Select a starting point</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: Map Legend -->
+        <section class="card-section section-legend" id="legend-card">
+          <div class="section-header">
+            <span id="legend-title" class="section-label">Legend</span>
+          </div>
+          <div class="legend-items-list">
+            <div class="legend-row">
+              <span class="legend-symbol room"></span>
+              <span id="legend-room" class="legend-name">Room</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-symbol junction"></span>
+              <span id="legend-junction" class="legend-name">Junction</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-symbol exit"></span>
+              <span id="legend-exit" class="legend-name">Exit</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-symbol start"></span>
+              <span id="legend-start" class="legend-name">Start</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-symbol blocked"></span>
+              <span id="legend-blocked" class="legend-name">Blocked</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-symbol path"></span>
+              <span id="legend-path" class="legend-name">Active Route</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </aside>
+
+    <!-- MAP CANVAS HERO (65-70%) -->
+    <section class="canvas-viewport" id="canvas-viewport">
+
+      <!-- Floating Zoom Pill (Top Left) -->
+      <div class="floating-zoom-pill" role="toolbar" aria-label="Map Navigation">
+        <button class="zoom-btn" onclick="app.zoomIn()" title="Zoom In (+)" aria-label="Zoom In">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z"/></svg>
+        </button>
+        <button class="zoom-btn" onclick="app.zoomOut()" title="Zoom Out (-)" aria-label="Zoom Out">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M2 8a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 8z"/></svg>
+        </button>
+        <div class="zoom-divider"></div>
+        <button class="zoom-btn" onclick="app.resetZoom()" title="Fit to Screen" aria-label="Fit to Screen">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.5 3a1.5 1.5 0 0 1 1.5-1.5h2a.75.75 0 0 1 0 1.5H3A.5.5 0 0 0 2.5 3v2a.75.75 0 0 1-1.5 0V3zm9.5-1.5a.75.75 0 0 1 .75-.75h2A1.5 1.5 0 0 1 15.25 2.25v2a.75.75 0 0 1-1.5 0V3a.5.5 0 0 0-.5-.5h-2a.75.75 0 0 1-.75-.75zm3.75 9.5a.75.75 0 0 1 .75.75v2a1.5 1.5 0 0 1-1.5 1.5h-2a.75.75 0 0 1 0-1.5h2a.5.5 0 0 0 .5-.5v-2a.75.75 0 0 1 .75-.75zm-13.25.75a.75.75 0 0 1 .75-.75v2a.5.5 0 0 0 .5.5h2a.75.75 0 0 1 0 1.5H3a1.5 1.5 0 0 1-1.5-1.5v-2z"/></svg>
+        </button>
+      </div>
+
+      <!-- Mode Hint Toast/Bar -->
+      <div class="mode-info-badge" id="mode-indicator">
+        <span id="mode-indicator-text">View Mode — Click node to select start</span>
+      </div>
+
+      <!-- Empty State -->
+      <div class="canvas-empty-state" id="map-empty-state">
+        <div class="empty-state-card">
+          <svg class="empty-blueprint-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="6" y="6" width="36" height="36" rx="6" stroke-dasharray="4 3"/>
+            <path d="M18 6v36M6 18h36M30 6v36M6 30h36"/>
+          </svg>
+          <h2 id="empty-title" class="empty-title">Import a Building Map</h2>
+          <p id="empty-desc" class="empty-desc">Upload a building.json specification or load the sample schematic to start simulating.</p>
+          <div class="empty-actions">
+            <label class="btn btn-primary" for="file-input-empty">
+              <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M7.47 1.47a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1-1.06 1.06L8.75 3.81V10a.75.75 0 0 1-1.5 0V3.81L5.53 5.53a.75.75 0 0 1-1.06-1.06l3-3z"/></svg>
+              <span id="empty-import-label">Import JSON</span>
+            </label>
+            <input type="file" id="file-input-empty" accept=".json" style="display:none;" onchange="app.importFile(event)" />
+            <button class="btn btn-secondary" onclick="app.loadSample()" id="load-sample-btn">
+              <span id="empty-sample-label">Load Sample</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SVG Technical Canvas -->
+      <div class="map-container" id="map-container">
+        <svg id="building-svg" class="building-svg" style="display:none;" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="blueprint-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1" class="grid-dot" />
+            </pattern>
+            <pattern id="hazard-hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="var(--blocked)" stroke-width="2.5" opacity="0.6" />
+            </pattern>
+            <marker id="arrow-amber" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 6 4 L 0 6.5 z" fill="var(--accent)" />
+            </marker>
+          </defs>
+
+          <!-- Dot grid background -->
+          <rect width="100%" height="100%" fill="url(#blueprint-dots)" />
+
+          <!-- Layers -->
+          <g id="svg-edges-layer"></g>
+          <g id="svg-nodes-layer"></g>
+          <g id="svg-labels-layer"></g>
+        </svg>
+      </div>
+
+      <!-- Status Bar at Canvas Bottom -->
+      <footer class="canvas-status-bar">
+        <div class="status-left">
+          <span id="status-indicator-dot" class="status-dot"></span>
+          <span id="status-message" class="status-text-msg">
+            <span id="status-text">Ready — Import building JSON or load sample</span>
+          </span>
+        </div>
+        <div class="status-metrics">
+          <div class="metric-pill" id="metric-steps-pill" style="display:none;">
+            <span class="metric-label" id="metric-steps-label">Steps:</span>
+            <span class="metric-val mono" id="metric-steps-val">0</span>
+          </div>
+          <div class="metric-pill" id="metric-cost-pill" style="display:none;">
+            <span class="metric-label" id="metric-cost-label">Cost:</span>
+            <span class="metric-val mono" id="metric-cost-val">0</span>
+          </div>
+          <span id="zoom-label-text" class="zoom-display mono">100%</span>
+        </div>
+      </footer>
+
+    </section>
+
+    <!-- RIGHT SIDEBAR: Tabbed Single Card (Nodes & Corridors) -->
+    <aside class="sidebar sidebar-right" id="sidebar-right">
+      <div class="unified-card tabbed-card">
+        
+        <!-- Tabs Header -->
+        <div class="tabs-header" role="tablist">
+          <button class="tab-btn active" id="tab-nodes-btn" role="tab" aria-selected="true" onclick="app.switchTab('nodes')">
+            <span id="nodes-panel-title">Nodes</span>
+            <span class="tab-count mono" id="nodes-count-badge">0</span>
+          </button>
+          <button class="tab-btn" id="tab-edges-btn" role="tab" aria-selected="false" onclick="app.switchTab('edges')">
+            <span id="edges-panel-title">Corridors</span>
+            <span class="tab-count mono" id="edges-count-badge">0</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Nodes -->
+        <div class="tab-content active" id="tab-nodes-content" role="tabpanel">
+          <div id="nodes-list" class="technical-list">
+            <p class="empty-list-placeholder" id="nodes-placeholder">No data loaded</p>
+          </div>
+        </div>
+
+        <!-- Tab 2: Corridors -->
+        <div class="tab-content" id="tab-edges-content" role="tabpanel">
+          <div id="edges-list" class="technical-list">
+            <p class="empty-list-placeholder" id="edges-placeholder">No data loaded</p>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Interactive Blueprint Tooltip -->
+  <div id="tooltip" class="technical-tooltip" style="display:none;"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-stack"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
